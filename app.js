@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const app = express();
 const _ = require('lodash');
+const flash = require('connect-flash');
+const session = require('express-session');
 
 app.set('view engine', 'ejs');
 
@@ -10,6 +12,29 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(express.static("public"));
+
+const sessionConfig = {
+  name: 'session',
+  secret: 'secret',
+  resave: false,
+  saveUninitialized: true,
+  cookie : {
+    httpOnly: true,
+    // secure: true,
+    expires: Date.now() + 1000*60*60*24*7,
+    maxAge: 1000*60*60*24*7
+  }
+}
+
+app.use(session(sessionConfig));
+app.use(flash());
+
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  next();
+})
 
 mongoose.connect("mongodb://localhost:27017/todolistDB", {
   useNewUrlParser: true
@@ -22,7 +47,7 @@ const itemsSchema = {
 const Item = mongoose.model("Item", itemsSchema);
 
 const item1 = new Item({
-  name: "Welcome to TODO list"
+  name: "Welcome to To-Do list"
 });
 
 const item2 = new Item({
@@ -85,15 +110,13 @@ app.get("/:customListName", (req, res) => {
 
 });
 
-app.get("/about", (req, res) => {
-  res.render("about");
-});
+
 
 app.post("/", (req, res) => {
   const itemName = req.body.newItem;
   const listName = req.body.list;
   if(itemName.length === 0){
-    req.flash('error', 'Item cannot be empty')
+    req.flash('error', 'Item cannot be empty');
     if(listName === "Today")
     return res.redirect('/');
     else
