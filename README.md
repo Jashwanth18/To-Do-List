@@ -22,4 +22,8 @@ Local storage to save your to-do list even if you close the browser
 Built With
 * HTML5
 * CSS3
+* EJS, Bootstrap
 * JavaScript
+* NodeJS & Express
+* MongoDB
+
